@@ -325,6 +325,24 @@ in src/lib.rs
     macro_rules! asdf {
 ```
 
+### kinds for filtering (with --include and --exclude)
+
+- associated_constant
+- associated_function
+- associated_type
+- constant
+- crate
+- enum
+- function
+- macro
+- method
+- struct
+- struct_field
+- trait
+- type_alias
+- variant
+- static
+
 > cds --compact --show-item --include method
 
 ```
@@ -372,3 +390,9 @@ in src/lib.rs
   src/lib.rs:44:1  macro
     macro_rules! asdf {
 ```
+
+# filtering by file
+
+`cds --filter` takes a `glob` as defined by these patterns: [https://docs.rs/glob/0.3.2/glob/struct.Pattern.html](https://docs.rs/glob/0.3.2/glob/struct.Pattern.html)
+
+You can use multiple filters.
