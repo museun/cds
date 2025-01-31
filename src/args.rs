@@ -373,8 +373,12 @@ fn glob_filters(
         {
             let pat = pat?;
             let local = pat.strip_prefix(&root).unwrap_or(&pat);
+            if local.starts_with("target") {
+                continue;
+            }
             paths.push(local.to_path_buf());
         }
     }
+
     Ok(paths)
 }
