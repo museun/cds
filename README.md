@@ -396,3 +396,35 @@ in src/lib.rs
 `cds --filter` takes a `glob` as defined by these patterns: [https://docs.rs/glob/0.3.2/glob/struct.Pattern.html](https://docs.rs/glob/0.3.2/glob/struct.Pattern.html)
 
 You can use multiple filters.
+
+An example:
+
+> cds -c -f "\*\*/manifest/\*.rs" -s
+
+```
+in src/manifest/handled.rs
+  src/manifest/handled.rs:4:1   enum
+    pub enum Handled {
+  src/manifest/handled.rs:5:5   variant
+    Bubble,
+  src/manifest/handled.rs:6:5   variant
+    Sink,
+
+in src/manifest/mapping.rs
+  src/manifest/mapping.rs:9:1   struct
+    pub struct Mapping {
+  src/manifest/mapping.rs:10:5  struct field
+    pub command: String,
+  src/manifest/mapping.rs:11:5  struct field
+    pub pattern: Option<Pattern>,
+  src/manifest/mapping.rs:12:5  struct field
+    pub raw_pattern: Option<String>,
+  src/manifest/mapping.rs:13:5  struct field
+    pub help: String,
+  src/manifest/mapping.rs:14:5  struct field
+    pub elevated: bool,
+  src/manifest/mapping.rs:15:5  struct field
+    pub handler: mlua::Function,
+  src/manifest/mapping.rs:26:5  method
+    pub fn dispatch(&self, msg: &Message, lua: &mlua::Lua, responder: &Responder, sink: &mut bool) {
+```
