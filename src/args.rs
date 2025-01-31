@@ -443,7 +443,6 @@ impl Args {
                     .long("include")
                     .help("include only specific lint kinds")
                     .conflicts_with("exclude")
-                    .group("filtering")
                     .help_heading("filtering")
                     .value_parser(clap::value_parser!(ClassifyKind))
                     .action(ArgAction::Append),
@@ -453,7 +452,6 @@ impl Args {
                     .short('e')
                     .long("exclude")
                     .help("exclude specific lint kinds")
-                    .group("filtering")
                     .help_heading("filtering")
                     .conflicts_with("include")
                     .value_parser(clap::value_parser!(ClassifyKind))
