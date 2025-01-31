@@ -1,0 +1,17 @@
+[package]
+name = "cds"
+version = "0.1.0"
+edition = "2021"
+readme = "README.md"
+
+[dependencies]
+anstream = "0.6.18"
+anstyle = "1.0.10"
+anyhow = "1.0.95"
+chorts = { git = "https://github.com/museun/chorts", rev = "567d17558c7e4ced3ab2c92393755d9de5c4c09b", features = [ "clap" ] }
+clap = { version = "4.5.27", features = [ "unstable-styles", "wrap_help" ] }
+directories = "6.0.0"
+glob = "0.3.2"
+serde = { version = "1.0.217", features = [ "derive" ] }
+str_indices = "0.4.4"
+toml = "0.8.19"
