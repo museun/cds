@@ -5,6 +5,8 @@ use std::{
 
 use chorts::{data::Text, Filename, Highlight, Visit, Visitor};
 
+use crate::args::ClassifyKind;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) struct Spanned<T> {
     pub(crate) item: T,
@@ -29,18 +31,26 @@ pub struct MissingDocs<'a> {
     pub map: BTreeMap<PathBuf, Vec<Missing>>,
     pub last: Option<String>,
     set: HashSet<&'a PathBuf>,
+    include: Vec<&'static str>, // this is exclusive
+    exclude: Vec<&'static str>, // this is inclusive
 }
 
 impl<'a> MissingDocs<'a> {
-    pub fn new(set: HashSet<&'a PathBuf>) -> Self {
+    pub fn new(
+        set: HashSet<&'a PathBuf>,
+        include: impl IntoIterator<Item = ClassifyKind>,
+        exclude: impl IntoIterator<Item = ClassifyKind>,
+    ) -> Self {
         Self {
             map: BTreeMap::new(),
             last: None,
             set,
+            include: include.into_iter().map(|s| s.as_str()).collect(),
+            exclude: exclude.into_iter().map(|s| s.as_str()).collect(),
         }
     }
 
-    fn filter_message(msg: &chorts::data::Message) -> bool {
+    fn filter_message(&self, msg: &chorts::data::Message) -> bool {
         let Some(code) = &msg.code else { return false };
         match &*code.code {
             "missing_docs"
@@ -50,15 +60,26 @@ impl<'a> MissingDocs<'a> {
             | "clippy::missing-panics-doc"
             | "clippy::missing-safety-doc"
             | "clippy::unnecessary_safety_doc"
-            | "clippy::undocumented_unsafe_blocks" => true,
-            _ => false,
+            | "clippy::undocumented_unsafe_blocks" => {}
+            _ => return false,
+        };
+
+        // the empty check because any([]) == true
+        if !self.include.is_empty() && !self.include.iter().any(|c| msg.message.ends_with(c)) {
+            return false;
         }
+
+        if !self.exclude.is_empty() && self.exclude.iter().any(|c| msg.message.ends_with(c)) {
+            return false;
+        }
+
+        true
     }
 }
 
 impl Visitor for MissingDocs<'_> {
     fn visit_message(&mut self, message: &chorts::data::Message) {
-        if Self::filter_message(message) {
+        if self.filter_message(message) {
             self.last = Some(message.message.clone());
             message.spans.accept(self);
         }

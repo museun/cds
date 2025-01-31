@@ -22,38 +22,31 @@ color = "#AAAAAA"
 [theme.location]
 dimmed = true
 
+# the style of the missing docs message
+[theme.message]
+color = "#999999"
+
 # the style of the highlighted code
 [theme.highlight_code]
 color = "#e8a"
 italic = true
 
 # the style of the normal code
-[theme.code]
-
-# the style of the missing docs message
-[theme.message]
-color = "#999999"
+# [theme.code]
 
 # styles for matching specific 'kinds' of items
 # [theme.kinds.associated_constant]
-
 # [theme.kinds.associated_function]
-
+# [theme.kinds.associated_type]
+# [theme.kinds.constant]
+# [theme.kinds.crate]
 # [theme.kinds.enum]
-
 # [theme.kinds.function]
-
+# [theme.kinds.macro]
 # [theme.kinds.method]
-
-# [theme.kinds.module]
-
 # [theme.kinds.struct]
-# color = "#FF00FF"
-
 # [theme.kinds.struct_field]
-
 # [theme.kinds.trait]
-
+# [theme.kinds.type_alias]
 # [theme.kinds.variant]
-
-# [theme.kinds.the_crate]
+# [theme.kinds.static]

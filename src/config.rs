@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     path::{Path, PathBuf},
     str::FromStr,
 };
@@ -89,33 +90,7 @@ pub struct Theme {
     pub highlight_code: Option<Style>,
     pub code: Option<Style>,
     #[serde(default)]
-    pub kinds: Kinds,
-}
-
-#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
-pub struct Kinds {
-    #[serde(rename = "associated_constant")]
-    pub associated_constant: Option<Style>,
-    #[serde(rename = "associated_function")]
-    pub associated_function: Option<Style>,
-    #[serde(rename = "enum")]
-    pub enumeration: Option<Style>,
-    #[serde(rename = "function")]
-    pub function: Option<Style>,
-    #[serde(rename = "method")]
-    pub method: Option<Style>,
-    #[serde(rename = "module")]
-    pub module: Option<Style>,
-    #[serde(rename = "struct")]
-    pub structure: Option<Style>,
-    #[serde(rename = "struct_field")]
-    pub struct_field: Option<Style>,
-    #[serde(rename = "trait")]
-    pub traity: Option<Style>,
-    #[serde(rename = "variant")]
-    pub variant: Option<Style>,
-    #[serde(rename = "the_crate")]
-    pub the_crate: Option<Style>,
+    pub kinds: HashMap<String, Style>,
 }
 
 impl From<Style> for anstyle::Style {

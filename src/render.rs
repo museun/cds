@@ -1,11 +1,17 @@
 use chorts::Highlight;
 
 use crate::{
+    args::ClassifyKind,
     config::{Config, Style, Theme},
     visit::MissingDocs,
 };
 
-pub fn show(docs: MissingDocs, compact: bool, show_item: bool, config: Config) {
+pub struct Options {
+    pub compact: bool,
+    pub show_item: bool,
+}
+
+pub fn show(docs: MissingDocs, options: Options, config: Config) {
     let (location, file_name, file_header, message, highlight, code) = (
         theme_style(config.theme.location),
         theme_style(config.theme.file_name),
@@ -34,7 +40,7 @@ pub fn show(docs: MissingDocs, compact: bool, show_item: bool, config: Config) {
                 col = missing.message.col
             );
 
-            let msg = if compact {
+            let msg = if options.compact {
                 shorten(&missing.message.item)
             } else {
                 &missing.message.item
@@ -47,13 +53,11 @@ pub fn show(docs: MissingDocs, compact: bool, show_item: bool, config: Config) {
                     + count_digits(missing.message.col),
             ));
 
-            let classification = Classify::classify(msg);
-
-            match classification.split(msg, &config.theme) {
-                Some(((head, tail), color)) => {
-                    let color = color.map(anstyle::Style::from).unwrap_or(message);
+            match Classify::classify(msg, &config.theme) {
+                Some((head, tail, style)) => {
+                    let style = theme_style(Some(style));
                     anstream::println!(
-                        "  {location} {sp} {reset}{message}{head}{reset}{color}{tail}{reset}"
+                        "  {location} {sp} {reset}{message}{head}{reset}{style}{tail}{reset}"
                     )
                 }
                 None => {
@@ -62,7 +66,7 @@ pub fn show(docs: MissingDocs, compact: bool, show_item: bool, config: Config) {
             }
 
             // this string check is because they attach spans to the whole crate
-            if show_item && !msg.ends_with("the crate") {
+            if options.show_item && !msg.ends_with("the crate") {
                 for (head, middle, tail) in partition(&missing.text) {
                     anstream::println!(
                         "    {code}{head}{reset}{highlight}{middle}{reset}{code}{tail}{reset}"
@@ -148,69 +152,15 @@ fn ceil_char_boundary(str: &str, index: usize) -> usize {
         .map_or(end, |pos| pos + index)
 }
 
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
-enum Classify {
-    AssociatedConstant(usize),
-    AssociatedFunction(usize),
-    Enum(usize),
-    Function(usize),
-    Method(usize),
-    Module(usize),
-    Struct(usize),
-    StructField(usize),
-    Trait(usize),
-    Variant(usize),
-    TheCrate(usize),
-    #[default]
-    Unknown,
-}
+struct Classify;
 
 impl Classify {
-    fn split<'a>(
-        &self,
-        input: &'a str,
-        theme: &Theme,
-    ) -> Option<((&'a str, &'a str), Option<Style>)> {
-        match *self {
-            Self::AssociatedConstant(start) => {
-                Some((input.split_at(start), theme.kinds.associated_constant))
-            }
-            Self::AssociatedFunction(start) => {
-                Some((input.split_at(start), theme.kinds.associated_function))
-            }
-            Self::Enum(start) => Some((input.split_at(start), theme.kinds.enumeration)),
-            Self::Function(start) => Some((input.split_at(start), theme.kinds.function)),
-            Self::Method(start) => Some((input.split_at(start), theme.kinds.method)),
-            Self::Module(start) => Some((input.split_at(start), theme.kinds.module)),
-            Self::Struct(start) => Some((input.split_at(start), theme.kinds.structure)),
-            Self::StructField(start) => Some((input.split_at(start), theme.kinds.struct_field)),
-            Self::Trait(start) => Some((input.split_at(start), theme.kinds.traity)),
-            Self::Variant(start) => Some((input.split_at(start), theme.kinds.variant)),
-            Self::TheCrate(start) => Some((input.split_at(start), theme.kinds.the_crate)),
-            Self::Unknown => None,
-        }
-    }
-
-    fn classify(input: &str) -> Self {
-        type Kind = fn(usize) -> Classify;
-        for (s, kind) in [
-            ("associated constant", Self::AssociatedConstant as Kind),
-            ("associated function", Self::AssociatedFunction),
-            ("enum", Self::Enum),
-            ("function", Self::Function),
-            ("method", Self::Method),
-            ("module", Self::Module),
-            ("struct", Self::Struct),
-            ("struct field", Self::StructField),
-            ("trait", Self::Trait),
-            ("variant", Self::Variant),
-            ("the crate", Self::TheCrate),
-        ] {
-            if let Some(index) = input.find(s) {
-                return kind(index);
-            }
-        }
-        Self::Unknown
+    fn classify<'a>(input: &'a str, theme: &Theme) -> Option<(&'a str, &'a str, Style)> {
+        let (kind, offset) = ClassifyKind::parse(input)?;
+        let key = kind.as_key();
+        let style = theme.kinds.get(key)?;
+        let (head, tail) = input.split_at(offset);
+        Some((head, tail, *style))
     }
 }
 

@@ -4,6 +4,123 @@ use anyhow::Context;
 use chorts::{Features, Target};
 use clap::{Arg, ArgAction};
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum ClassifyKind {
+    AssociatedConstant,
+    AssociatedFunction,
+    AssociatedType,
+    Constant,
+    Crate,
+    Enum,
+    Function,
+    Macro,
+    Method,
+    Struct,
+    StructField,
+    Trait,
+    TypeAlias,
+    Variant,
+    Static,
+}
+
+impl ClassifyKind {
+    pub const fn as_key(&self) -> &'static str {
+        match self {
+            Self::AssociatedConstant => "associated_constant",
+            Self::AssociatedFunction => "associated_function",
+            Self::AssociatedType => "associated_type",
+            Self::Constant => "constant",
+            Self::Crate => "crate",
+            Self::Enum => "enum",
+            Self::Function => "function",
+            Self::Macro => "macro",
+            Self::Method => "method",
+            Self::Struct => "struct",
+            Self::StructField => "struct_field",
+            Self::Trait => "trait",
+            Self::TypeAlias => "type_alias",
+            Self::Variant => "variant",
+            Self::Static => "static",
+        }
+    }
+
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::AssociatedConstant => "associated constant",
+            Self::AssociatedFunction => "associated function",
+            Self::AssociatedType => "associated type",
+            Self::Constant => "constant",
+            Self::Crate => "the crate",
+            Self::Enum => "enum",
+            Self::Function => "function",
+            Self::Macro => "macro",
+            Self::Method => "method",
+            Self::Struct => "struct",
+            Self::StructField => "struct field",
+            Self::Trait => "trait",
+            Self::TypeAlias => "type alias",
+            Self::Variant => "variant",
+            Self::Static => "static",
+        }
+    }
+
+    pub fn parse(input: &str) -> Option<(Self, usize)> {
+        for (k, v) in [
+            Self::AssociatedConstant,
+            Self::AssociatedFunction,
+            Self::AssociatedType,
+            Self::Constant,
+            Self::Crate,
+            Self::Enum,
+            Self::Function,
+            Self::Macro,
+            Self::Method,
+            Self::Struct,
+            Self::StructField,
+            Self::Trait,
+            Self::TypeAlias,
+            Self::Variant,
+            Self::Static,
+        ]
+        .iter()
+        .copied()
+        .map(|this| (this.as_str(), this))
+        {
+            let Some(p) = input.strip_suffix(k) else {
+                continue;
+            };
+            return Some((v, p.len()));
+        }
+        None
+    }
+}
+
+impl clap::ValueEnum for ClassifyKind {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[
+            Self::AssociatedConstant,
+            Self::AssociatedFunction,
+            Self::AssociatedType,
+            Self::Constant,
+            Self::Crate,
+            Self::Enum,
+            Self::Function,
+            Self::Macro,
+            Self::Method,
+            Self::Struct,
+            Self::StructField,
+            Self::Trait,
+            Self::TypeAlias,
+            Self::Variant,
+            Self::Static,
+        ]
+    }
+
+    fn to_possible_value(&self) -> Option<clap::builder::PossibleValue> {
+        Some(clap::builder::PossibleValue::new(self.as_key()))
+    }
+}
+
 #[derive(Debug)]
 pub struct Args {
     pub path: PathBuf,
@@ -23,6 +140,8 @@ pub struct Args {
     pub print_config_path: bool,
 
     pub filter: Vec<PathBuf>,
+    pub include: Vec<ClassifyKind>,
+    pub exclude: Vec<ClassifyKind>,
 }
 
 impl Args {
@@ -313,8 +432,32 @@ impl Args {
                     .long("filter")
                     .short('f')
                     .action(ArgAction::Append)
+                    .group("filtering")
+                    .help_heading("filtering")
                     .help("focus these files")
                     .long_help("given a glob, only shows the files that match it."),
+            )
+            .arg(
+                Arg::new("include")
+                    .short('i')
+                    .long("include")
+                    .help("include only specific lint kinds")
+                    .conflicts_with("exclude")
+                    .group("filtering")
+                    .help_heading("filtering")
+                    .value_parser(clap::value_parser!(ClassifyKind))
+                    .action(ArgAction::Append),
+            )
+            .arg(
+                Arg::new("exclude")
+                    .short('e')
+                    .long("exclude")
+                    .help("exclude specific lint kinds")
+                    .group("filtering")
+                    .help_heading("filtering")
+                    .conflicts_with("include")
+                    .value_parser(clap::value_parser!(ClassifyKind))
+                    .action(ArgAction::Append),
             );
 
         let mut matches = cmd.get_matches();
@@ -338,6 +481,18 @@ impl Args {
             ignore_config: matches.get_flag("ignore_config"),
             print_config_path: matches.get_flag("print_config_path"),
             print_default_config: matches.get_flag("print_default_config"),
+
+            include: matches
+                .remove_many("include")
+                .into_iter()
+                .flatten()
+                .collect(),
+
+            exclude: matches
+                .remove_many("exclude")
+                .into_iter()
+                .flatten()
+                .collect(),
 
             filter: glob_filters(
                 {

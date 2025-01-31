@@ -7,12 +7,14 @@ use args::Args;
 
 mod config;
 use config::Config;
+use render::Options;
 
 mod render;
 mod visit;
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse()?;
+
     let path = Config::initial_config(args.ignore_config)?;
 
     if args.print_config_path {
@@ -63,10 +65,15 @@ fn main() -> anyhow::Result<()> {
     let reasons = cmd.gather()?;
 
     let set = args.filter.iter().collect::<HashSet<_>>();
-    let mut docs = visit::MissingDocs::new(set);
+    let mut docs = visit::MissingDocs::new(set, args.include, args.exclude);
     reasons.accept(&mut docs);
-    // eprintln!("{docs:#?}", docs = docs.map);
-    render::show(docs, args.compact, args.show_item, config);
+
+    let options = Options {
+        compact: args.compact,
+        show_item: args.show_item,
+    };
+
+    render::show(docs, options, config);
 
     Ok(())
 }
