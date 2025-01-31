@@ -92,3 +92,67 @@ configuration:
           print the configuration location and exit
 
 ```
+
+## configuration
+
+```toml
+# style syntax
+#   color: rgb(base10, base10, base10)
+#   color: #RGB (base 16)
+#   color: #RRGGBB (base 16)
+#   bold: bool
+#   italic: bool
+#   underline: bool
+#   dimmed: bool
+
+
+# the style of the filename in the first-line
+[theme.file_header]
+color = "#56b6c2"
+bold = true
+italic = true
+
+# the style of the filename in each result
+[theme.file_name]
+color = "#AAAAAA"
+
+# the style of the row/col in each result
+[theme.location]
+dimmed = true
+
+# the style of the highlighted code
+[theme.highlight_code]
+color = "#e8a"
+italic = true
+
+# the style of the normal code
+[theme.code]
+
+# the style of the missing docs message
+[theme.message]
+color = "#999999"
+
+# styles for matching specific 'kinds' of items
+# [theme.kinds.associated_constant]
+
+# [theme.kinds.associated_function]
+
+# [theme.kinds.enum]
+
+# [theme.kinds.function]
+
+# [theme.kinds.method]
+
+# [theme.kinds.module]
+
+# [theme.kinds.struct]
+# color = "#FF00FF"
+
+# [theme.kinds.struct_field]
+
+# [theme.kinds.trait]
+
+# [theme.kinds.variant]
+
+# [theme.kinds.the_crate]
+```
